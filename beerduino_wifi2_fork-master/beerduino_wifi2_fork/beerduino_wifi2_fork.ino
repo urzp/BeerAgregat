@@ -97,11 +97,11 @@ int npp=0;
 int maxvp=100; // максимальное время паузы
   int dh=0;
 
-  int kol_pauz=2, vr_varki=30, kol_hop=0, virpul=0;
+  int kol_pauz=2, kol_pauz_page1, vr_varki=30, kol_hop=0, virpul=0;
   int  pressed_button;
   int zator, varka , minus, plus, dalee, nazad, plus_m[5], minus_m[5], recep, zater, varev, stng, moyka, vr_minus, tim, stp, ppm, pproc; // кнопки
   int menu=0, drowMenu=-1;
-  int tp[6], vp[6],vh[5],st[15];
+  int tp[11], vp[11],vh[5],st[15];
 
 byte nstad=0;                   
 byte beepwork=0;
@@ -189,18 +189,18 @@ void setup()
 
 //  if (rtctf)   myGLCD.print ("RTC" ,5,5); // индикация RTC
 // myGLCD.print ("M.""\x82\x83""M""\x86""H",175,45);
-delay (1000);
-  myGLCD.print ("3A""\x89""PE""\x8F""EHO" ,CENTER,160); 
-delay (1000);
-  myGLCD.print ("KOMMEP""\x8D""ECKOE",CENTER,180);
-delay (1000);
-  myGLCD.print ("\x86""C""\x89""O""\x88\x92""3OBAH""\x86""E",CENTER,200);
-delay (1000);
- myGLCD.print ("creator M.""\x82\x83""M""\x86""H",CENTER,12);
+//delay (1000);
+//  myGLCD.print ("3A""\x89""PE""\x8F""EHO" ,CENTER,160); 
+//delay (1000);
+//  myGLCD.print ("KOMMEP""\x8D""ECKOE",CENTER,180);
+//delay (1000);
+//  myGLCD.print ("\x86""C""\x89""O""\x88\x92""3OBAH""\x86""E",CENTER,200);
+//delay (1000);
+// myGLCD.print ("creator M.""\x82\x83""M""\x86""H",CENTER,12);
 l_etap=read_EEPROM(20);
 if (l_etap==1 || l_etap==2) {drowMenu=0; menu=41;}
 
-delay (800);
+delay (4000);
 beeper();  
 
 
@@ -243,8 +243,8 @@ if (myTouch.dataAvailable())    {
   else if (pressed_button==pproc && nkpz==true){nkpz=false;}
   else if (pressed_button==plus) {
 
-  if      (menu==1)     {kol_pauz++; kol_pauz=constrain(kol_pauz, 2, 5); myGLCD.printNumI(kol_pauz, CENTER, 70); }
-  if      (menu==5)     {zaderjka=zaderjka+10; zaderjka=constrain(zaderjka, 0, 480); myGLCD.print(" "+String(zaderjka)+ " ", CENTER, 85); }
+  if      (menu==1)     {kol_pauz++; kol_pauz=constrain(kol_pauz, 2, 10); myGLCD.setFont(BigFont);for(int i=0;i <40; i=i+5) {myGLCD.print("    ", CENTER, 70+i);} myGLCD.setFont(SevenSegNumFont); myGLCD.printNumI(kol_pauz, CENTER, 70); }
+  if      (menu==7)     {zaderjka=zaderjka+10; zaderjka=constrain(zaderjka, 0, 480); myGLCD.print(" "+String(zaderjka)+ " ", CENTER, 85); }
   else if (menu==11)    {kol_hop++;    kol_hop=constrain(kol_hop, 0, 5);  myGLCD.printNumI(kol_hop, CENTER,70 );}
   else if (menu==10)    {vr_varki=vr_varki+5;    vr_varki=constrain(vr_varki, 10, 900); myGLCD.print("   ", CENTER,90 );  myGLCD.printNumI(vr_varki, CENTER,90 );}  
   else if (menu==15)    {virpul=1;   myGLCD.print("   ", CENTER,90 );  myGLCD.print(onoff[virpul], CENTER,90 );}
@@ -252,8 +252,8 @@ if (myTouch.dataAvailable())    {
 }
   else if (pressed_button==minus) {
 
-  if      (menu==1)    {kol_pauz--; kol_pauz=constrain(kol_pauz, 2, 5); myGLCD.printNumI(kol_pauz, CENTER, 70);}
-  if      (menu==5)    {zaderjka=zaderjka-10; zaderjka=constrain(zaderjka, 0, 480); myGLCD.print(" "+String(zaderjka)+ " ", CENTER, 85); }
+  if      (menu==1)    {kol_pauz--; kol_pauz=constrain(kol_pauz, 2, 10); myGLCD.setFont(BigFont);for(int i=0;i <40; i=i+5) {myGLCD.print("    ", CENTER, 70+i);} myGLCD.setFont(SevenSegNumFont); myGLCD.printNumI(kol_pauz, CENTER, 70);}
+  if      (menu==7)    {zaderjka=zaderjka-10; zaderjka=constrain(zaderjka, 0, 480); myGLCD.print(" "+String(zaderjka)+ " ", CENTER, 85); }
   else if (menu==11)   {kol_hop--;   kol_hop=constrain(kol_hop, 0, 5);  myGLCD.printNumI(kol_hop, CENTER,70 );}  
   else if (menu==10)   {vr_varki=vr_varki-5; vr_varki=constrain(vr_varki, 10, 900); myGLCD.print("   ", CENTER,90 );  myGLCD.printNumI(vr_varki, CENTER,90 );}
   else if (menu==15)   {virpul=0;   myGLCD.print("   ", CENTER,90 ); myGLCD.print(onoff[virpul], CENTER,90 );}
@@ -264,7 +264,7 @@ if (myTouch.dataAvailable())    {
   else if (pressed_button==dalee)   {
   if (menu==22 && nom_rec>=0)  {nom_rec++;drowMenu=1000;}    
   else if (menu==32 && st[9]==1)  {menu=34;}  
-  else if (menu==5)  {vnz=clock(); menu=6; disableKnopok (drowMenu);} 
+  else if (menu==7)  {vnz=clock(); menu=8; disableKnopok (drowMenu);} 
   else if (menu==11 && kol_hop<1)  {menu=13;} 
   else if (menu==15 && virpul==1)  {menu=16;} 
   else if (menu==15 && virpul==0)  {menu=0;} 
@@ -293,7 +293,7 @@ if (myTouch.dataAvailable())    {
       aa=aa+1;
       vp[j]=read_EEPROM(24+aa); 
       }
-      menu=7;
+      menu=9;
     }
   }
   else if (menu==42) {
@@ -323,7 +323,9 @@ if (myTouch.dataAvailable())    {
 
  
   else if (menu==2) {gradusi(pressed_button);}
-  else if (menu==3) {vremya (pressed_button);}
+  else if (menu==3) {gradusi_2(pressed_button);} 
+  else if (menu==4) {vremya(pressed_button);}
+  else if (menu==5) {vremya_2(pressed_button);}
   else if (menu==12) {hop(pressed_button);}
   else if (menu==14) {
    
@@ -400,32 +402,66 @@ if (drowMenu==1) break;
 break;
 
 case 2:  // температура пауз
+
 if (drowMenu==2) break;
   disableKnopok (drowMenu);
-  mpm(kol_pauz);
+  kol_pauz_page1=kol_pauz;
+  if(kol_pauz>5) {kol_pauz_page1=5;}
+  mpm(kol_pauz_page1);
   drowMenu=2;
   myGLCD.setFont(SmallFont);
   myGLCD.print ("TEM""\x89""EPAT""\x8A""PA ""\x89""A""\x8A\x85",15,25,90);
   myGLCD.setFont(BigFont);
-  for (int j=0; j <kol_pauz ; j++) {
+  for (int j=0; j <kol_pauz_page1 ; j++) {
   myGLCD.print(String(tp[j+1])+"\x7F", CENTER,12+38*j );
 }
 
 break;
 
-case 3: // время пауз
+case 3:  // температура пауз
+if (kol_pauz<6 and drowMenu==2) {menu=4;break;}
+if (kol_pauz<6 and drowMenu==4) {menu=2;break;}
 if (drowMenu==3) break;
   disableKnopok (drowMenu);
-  mpm(kol_pauz);
+  mpm(kol_pauz-5);
   drowMenu=3;
-  myGLCD.print ("BPEM""\x95"" ""\x89""A""\x8A\x85",20,10,90);
-   for (int j=0; j <kol_pauz ; j++) {
-   myGLCD.printNumI(vp[j+1], CENTER,12+38*j );}
-
+  myGLCD.setFont(SmallFont);
+  myGLCD.print ("TEM""\x89""EPAT""\x8A""PA ""\x89""A""\x8A\x85",15,25,90);
+  myGLCD.setFont(BigFont);
+  for (int j=5; j <kol_pauz ; j++) {
+  myGLCD.print(String(tp[j+1])+"\x7F", CENTER,12+38*(j-5) );
+}
 
 break;
-case 4:
-if (drowMenu==4) break; // проверка
+
+case 4: // время пауз
+if (drowMenu==4) break;
+  disableKnopok (drowMenu);
+  kol_pauz_page1=kol_pauz;
+  if(kol_pauz>5) kol_pauz_page1=5;
+  mpm(kol_pauz_page1);
+  drowMenu=4;
+  myGLCD.print ("BPEM""\x95"" ""\x89""A""\x8A\x85",20,10,90);
+   for (int j=0; j <kol_pauz_page1 ; j++) {
+   myGLCD.printNumI(vp[j+1], CENTER,12+38*(j) );}
+break;
+
+case 5: // время пауз
+if (kol_pauz<6 and drowMenu==4) {menu=6;break;}
+if (kol_pauz<6 and drowMenu==6) {menu=4;break;}
+if (drowMenu==5) break;
+  disableKnopok (drowMenu);
+  mpm(kol_pauz-5);
+  drowMenu=5;
+  myGLCD.print ("BPEM""\x95"" ""\x89""A""\x8A\x85",20,10,90);
+   for (int j=5; j <kol_pauz ; j++) {
+   myGLCD.printNumI(vp[j+1], CENTER,12+38*(j-5) );}
+break;
+
+
+
+case 6:
+if (drowMenu==6) break; // проверка
   disableKnopok (drowMenu);
   myButtons.enableButton (dalee, true); 
   myButtons.enableButton (nazad, true); 
@@ -437,46 +473,47 @@ if (drowMenu==4) break; // проверка
   for (int j=1; j <=kol_pauz ; j++) {
   myGLCD.print ("\x89""A""\x8A\x85""A N"+String(j)+": "+"T="+String(tp[j])+"\x7F | B="+String(vp[j])+"\xA1\x9D\xA2"  , CENTER ,20+15*j);
   }
-  drowMenu=4;
+  drowMenu=6;
 
 break;
-case 5:
-if (drowMenu==5) break;
+case 7:
+if (drowMenu==7) break;
   disableKnopok (drowMenu);
   bpm();
-  drowMenu=5;
+  drowMenu=7;
   myGLCD.print ("3A""\x82""EP""\x84""KA",CENTER,10);
   myGLCD.printNumI(zaderjka, CENTER, 85);
 break;
 
-case 6:
+case 8:
   vdkz=zaderjka*60 -(clock()-vnz)/1000;
-  if (vdkz<1 || zaderjka==0) {menu=7;break;}
+  if (vdkz<1 || zaderjka==0) {menu=9;break;}
 
-if (drowMenu!=6) {
+if (drowMenu!=8) {
    disableKnopok (drowMenu);
   myButtons.enableButton (dalee, true); 
   myButtons.enableButton (nazad, true); 
   myGLCD.print ("CTAPT ""\x8D""EPE3",CENTER,10);
   myGLCD.print("CEK", CENTER, 155);
   myGLCD.setFont(SevenSegNumFont);
-  drowMenu=6;
+  drowMenu=8;
 }
 
   myGLCD.printNumI( vdkz, CENTER, 85);
 
 break;
 
-case 7: // процесс затирания
+case 9: // процесс затирания
 
-if (drowMenu!=7) {
+if (drowMenu!=9) {
   nstad=1;
   disableKnopok (drowMenu);
   myGLCD.print ("3AT""\x86""PAH""\x86""E" , CENTER ,15);
   oxi_pump ();
   myGLCD.print ("TEM""\x89""EPAT""\x8A""PA 3ATOPA" , CENTER ,40);
-  drowMenu=7;
+  drowMenu=9;
   windowStartTime = clock();
+  
 
 }
 if (nkpz==false) pump_zator();
@@ -660,7 +697,7 @@ if (nom_rec<kol_receptov-1) {
   myGLCD.print (recname[nom_rec] , CENTER ,10);
   myGLCD.setFont(SmallFont);
   kol_pauz=recpara[nom_rec][1];
-  if (kol_pauz>5 || kol_pauz<2)  error=true;
+  if (kol_pauz>10 || kol_pauz<2)  error=true;
   for (int j=2; j <= kol_pauz+1 ; j++) {
   tp[j-1]= recpara[nom_rec][j];
   vp[j-1]= recpara[nom_rec][j+kol_pauz];
@@ -895,9 +932,10 @@ void grafik () {
   ynl[j]=195-tp[j];
   xkl[j]=xnl[j]+vp[j];
   ykl[j]=195-tp[j];
-  myGLCD.drawLineBig (xnl[j],ynl[j],xkl[j],ykl[j],3);   
+  myGLCD.drawLineBig (xnl[j],ynl[j],xkl[j],ykl[j],3); 
+  
   }
-  for (int j=2; j <=kol_pauz ; j++) {  myGLCD.drawLineBig (xkl[j-1],ykl[j-1],xnl[j],ynl[j],4);  }
+  for (int j=2; j <=kol_pauz ; j++) {  myGLCD.drawLineBig (xkl[j-1],ykl[j-1],xnl[j],ynl[j],4); }
   myGLCD.setColor(255,255,255);
   }
 
@@ -926,22 +964,36 @@ vh[nm]=constrain(vh[nm], 0, vr_varki); // ограничиваем время з
 myGLCD.printNumI(vh[nm], CENTER,12+38*nm );
 }
 
-
+//------------------------------------------------------------------
 void gradusi(int pbn){
   int nm=-1;
   for (int j = 0; j <kol_pauz; j++) {          
   if     (pbn==minus_m[j]) {nm=j+1; tp[nm]--;}
   else if (pbn==plus_m[j]) {nm=j+1; tp[nm]++;}
+  if (j==4) j=kol_pauz;
   }
   if (nm==-1) return;
   tp[nm]=constrain(tp[nm], 30, 85);  // ограничиваем температуру пауз 
   myGLCD.print(String(tp[nm])+"\x7F", CENTER,12+38*(nm-1) );
 }
+
+void gradusi_2(int pbn){
+  int nm=-1;
+  for (int j = 5; j <kol_pauz; j++) {          
+  if     (pbn==minus_m[j-5]) {nm=j+1; tp[nm]--;}
+  else if (pbn==plus_m[j-5]) {nm=j+1; tp[nm]++;}
+  }
+  if (nm==-1) return;
+  tp[nm]=constrain(tp[nm], 30, 85);  // ограничиваем температуру пауз 
+  myGLCD.print(String(tp[nm])+"\x7F", CENTER,12+38*(nm-6) );
+}
+//--------------------------------------------------------------------
 void vremya(int pbn){
   int nm=-1;
   for (int j = 0; j <kol_pauz; j++) {          
   if     (pbn==minus_m[j]) {nm=j+1; vp[nm]--;}
   else if (pbn==plus_m[j]) {nm=j+1; vp[nm]++;}
+  if (j==4) j=kol_pauz;
   }
   if (nm==-1) return;
    myGLCD.print("   ", CENTER,12+(nm-1)*38);
@@ -949,8 +1001,18 @@ void vremya(int pbn){
    myGLCD.printNumI(vp[nm], CENTER,12+38*(nm-1) );
 }
 
-
-
+void vremya_2(int pbn){
+  int nm=-1;
+  for (int j = 5; j <kol_pauz; j++) {          
+  if     (pbn==minus_m[j-5]) {nm=j+1; vp[nm]--;}
+  else if (pbn==plus_m[j-5]) {nm=j+1; vp[nm]++;}
+  }
+  if (nm==-1) return;
+   myGLCD.print("   ", CENTER,12+(nm-6)*38);
+   vp[nm]=constrain(vp[nm], 1, maxvp);  // ограничиваем время пауз 
+   myGLCD.printNumI(vp[nm], CENTER,12+38*(nm-6) );
+}
+//-------------------------------------------------------------------------
 
 
 void nastr(int pbn , int kstr){
