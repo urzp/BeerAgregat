@@ -75,8 +75,11 @@ void UTouch::InitTouch(byte orientation )
     pinMode(T_IRQ,  OUTPUT);
 
 	sbi(P_CS, B_CS);
+    delay(15);
 	sbi(P_CLK, B_CLK);
+    delay(15);
 	sbi(P_DIN, B_DIN);
+    delay(15);
 	sbi(P_IRQ, B_IRQ);
 }
 

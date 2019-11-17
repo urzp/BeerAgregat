@@ -1,6 +1,6 @@
 #include <SPI.h>
 #include <UTFT.h>
-#include <UTouch.h>
+#include "UTouch-master/UTouch.h"
 #include <UTFT_Buttons.h>
 #include <OneWire.h>
 #include <SD.h>
@@ -118,6 +118,7 @@ int chas,minuta;
 
 void setup()
 {
+ 
   Serial3.begin(57600);
   Serial.begin(9600);
    
@@ -143,6 +144,7 @@ void setup()
   rtctf=true; setSyncProvider(RTC.get);starttime=now();
   }
   myGLCD.InitLCD();
+  delay(300);
   myGLCD.setContrast(64);
 //  myGLCD.setBackColor(VGA_TRANSPARENT);
   myGLCD.setBackColor(bgcolor[0],bgcolor[1],bgcolor[2]);
