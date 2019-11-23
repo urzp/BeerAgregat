@@ -97,7 +97,7 @@ int npp=0;
 int maxvp=100; // максимальное время паузы
   int dh=0;
 
-  int kol_pauz=2, kol_pauz_page1, vr_varki=30, kol_hop=0, virpul=0;
+  int kol_pauz=2, kol_pauz_page1,kol_pauz_page2, vr_varki=30, kol_hop=0, virpul=0;
   int  pressed_button;
   int zator, varka , minus, plus, dalee, nazad, plus_m[5], minus_m[5], recep, zater, varev, stng, moyka, vr_minus, tim, stp, ppm, pproc; // кнопки
   int menu=0, drowMenu=-1;
@@ -180,7 +180,10 @@ void setup()
   for (int j=0; j <5 ; j++) {
   minus_m[j]  =myButtons.addButton( 50,4+38*j , 70,  30, "-");
   plus_m[j]  = myButtons.addButton( 200,4+38*j ,70,  30, "+");
-  tp[j+1]=30+10*j;
+  }
+
+  for (int j=0; j <10 ; j++) {
+  tp[j+1]=30+5*j;
   vp[j+1]=10;
   }
 //  myGLCD.drawRoundRect (25,25,295,215);
@@ -310,6 +313,8 @@ if (myTouch.dataAvailable())    {
     setSyncProvider(RTC.get);
     menu=0;
   }  
+  else if ((menu==6)&&(kol_pauz>5)){menu=60;}
+  else if ((menu==60)&&(kol_pauz>5)){menu=7;}
   else {menu++;}
 }
   
@@ -320,6 +325,8 @@ if (myTouch.dataAvailable())    {
   else if (menu==22 && nom_rec>0)   {nom_rec--;drowMenu=1000;}    
   else if (menu==41)  {menu=0;l_etap=0;} 
   else if (menu==42)  {menu=0;}
+  else if ((menu==60)&&(kol_pauz>5)){menu=6;}
+  else if ((menu==7)&&(kol_pauz>5)){menu=60;}  
   else {menu--;}
   }
 
@@ -474,12 +481,30 @@ if (drowMenu==6) break; // проверка
   vp[0]=10;
   myGLCD.setFont(SmallFont);
   grafik ();
-  for (int j=1; j <=kol_pauz ; j++) {
+ 
+  for (int j=1; j <=kol_pauz; j++) {
   myGLCD.print ("\x89""A""\x8A\x85""A N"+String(j)+": "+"T="+String(tp[j])+"\x7F | B="+String(vp[j])+"\xA1\x9D\xA2"  , CENTER ,20+15*j);
+  if(j>=5) {j=kol_pauz;}
   }
   drowMenu=6;
-
 break;
+
+case 60:
+if (drowMenu==60) break; // проверка
+  disableKnopok (drowMenu);
+  myButtons.enableButton (dalee, true); 
+  myButtons.enableButton (nazad, true); 
+  myGLCD.print ("\x89""POBEPKA" , CENTER ,10);
+  tp[0]=tp[1]+st[7];
+  vp[0]=10;
+  myGLCD.setFont(SmallFont);
+  grafik ();
+  for (int j=6; j <=kol_pauz ; j++) {
+  myGLCD.print ("\x89""A""\x8A\x85""A N"+String(j)+": "+"T="+String(tp[j])+"\x7F | B="+String(vp[j])+"\xA1\x9D\xA2"  , CENTER ,20+15*(j-5));
+  }
+  drowMenu=60;
+break;
+
 case 7:
 if (drowMenu==7) break;
   disableKnopok (drowMenu);
@@ -487,6 +512,7 @@ if (drowMenu==7) break;
   drowMenu=7;
   myGLCD.print ("3A""\x82""EP""\x84""KA",CENTER,10);
   myGLCD.printNumI(zaderjka, CENTER, 85);
+  
 break;
 
 case 8:
@@ -708,6 +734,7 @@ if (nom_rec<kol_receptov-1) {
   if  (tp[j-1]>85  || tp[j-1]<30) error=true;
   if  (vp[j-1]>100 || vp[j-1]<0)  error=true;
   myGLCD.print ("\x89""A""\x8A\x85""A N"+String(j-1)+": "+"T="+String(tp[j-1])+"\x7F | B="+String(vp[j-1])+"\xA1\x9D\xA2"  , CENTER ,14*j);
+  if (j>5){j=kol_pauz+1;}
   }
 
   vr_varki=recpara[nom_rec][kol_pauz*2+2];   myGLCD.print ( "BAPKA " +  String(vr_varki)+"\xA1\x9D\xA2", CENTER ,100);
@@ -715,6 +742,7 @@ if (nom_rec<kol_receptov-1) {
   kol_hop=recpara[nom_rec][kol_pauz*2+3];
   if (kol_hop>5 || kol_hop<0)       error=true;
   int x=0 , iks, igr;
+
 
   for (int j=0; j < kol_hop; j++) {
   vh[j] = recpara[nom_rec][kol_pauz*2+4+j];
@@ -917,13 +945,13 @@ void mpm(int kk) {
 
 
 void grafik () {
-  int xnl[6];
-  int ynl[6];
-  int xkl[6];
-  int ykl[6];
+  int xnl,xkl_;
+  int ynl,ykl_;
+  int xkl;
+  int ykl;
   int smper;
   int smpos;
-  xkl[0]=0;
+  xkl=0;
   myGLCD.print ("t=" + String((int)t_zatora) + "\x7F""C" , 20 ,170);
   myGLCD.drawLineBig (13,5,13,185,3); // ось Y
   myGLCD.drawLineBig (15,185,315,185,3); // ось x
@@ -932,14 +960,15 @@ void grafik () {
   myGLCD.setColor(255,0,0);
   for (int j=1; j <=kol_pauz ; j++) {
   
-  xnl[j]=5+xkl[j-1]+10;
-  ynl[j]=195-tp[j];
-  xkl[j]=xnl[j]+vp[j];
-  ykl[j]=195-tp[j];
-  myGLCD.drawLineBig (xnl[j],ynl[j],xkl[j],ykl[j],3); 
-  
+  xnl=5+xkl+10;
+  ynl=195-tp[j];
+  xkl=xnl+vp[j];
+  ykl=195-tp[j];
+  myGLCD.drawLineBig (xnl,ynl,xkl,ykl,3); 
+  if (j>1){myGLCD.drawLineBig (xkl_,ykl_,xnl,ynl,4);}
+  xkl_=xkl;
+  ykl_=ykl;
   }
-  for (int j=2; j <=kol_pauz ; j++) {  myGLCD.drawLineBig (xkl[j-1],ykl[j-1],xnl[j],ynl[j],4); }
   myGLCD.setColor(255,255,255);
   }
 
@@ -1090,7 +1119,7 @@ tz();
 pumpind();
 senddatawifi();
 SSColor ();
-//PID_HEAT (tp[1]);
+PID_HEAT (tp[1]);
 
 
 if (myTouch.dataAvailable()) {if (myButtons.checkButtons()==dalee)   {myButtons.enableButton (stp, true);myButtons.enableButton (pproc, true);  sump=0; npp=0; solod=true;nomer_pauzi=1;nagrev=true;sp=clock()+6000000;}}
@@ -1205,7 +1234,7 @@ if (nagrev==true && t_zatora>=st[5]) {nagrev=false; sp=clock()+long(vr_varki)*60
 
 
 
-//PID_HEAT (st[5]+dh);
+PID_HEAT (st[5]+dh);
 
 if (clock()>=sp) {digitalWrite(pin_pump,LOW); digitalWrite(pin_relay,LOW);digitalWrite(pin_cool,HIGH);disableKnopok(1);
 myGLCD.print ("KOHE""\x8C"" BAPK""\x86",CENTER,110);beeper();delay (3000);  menu=15;}
