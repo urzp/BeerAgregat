@@ -5,6 +5,7 @@
 #include <OneWire.h>
 #include <SD.h>
 #include <PID_v1.h>
+#include <PWM.h>
 #include <EEPROM.h>
 #include "Time.h"
 #include <Wire.h>
@@ -91,6 +92,7 @@ boolean pump_work=LOW;
 boolean solod=false, yod=false;
 boolean nkpz=false;
 byte shim=100, ert=0;
+int shim_;
 unsigned long sump=0;
 unsigned long vpop=0;
 int npp=0;
@@ -118,15 +120,19 @@ int chas,minuta;
 
 void setup()
 {
- 
+
+  
   Serial3.begin(57600);
   Serial.begin(9600);
    
-  pinMode(pin_relay, OUTPUT);
+  pinMode(pin_relay, OUTPUT);   
   pinMode(pin_pump,  OUTPUT);
+  
+  InitTimersSafe();  
 
   digitalWrite (pin_pump ,LOW);
-  digitalWrite (pin_relay,LOW);
+  analogWrite (pin_relay,0);
+  SetPinFrequency(pin_relay, 1); 
 
   analogWrite (pin_zvuk ,0);
  /* for (byte j=3; j <=7 ; j++) {  
@@ -244,7 +250,7 @@ if (myTouch.dataAvailable())    {
   else if (pressed_button==stp && knkd>1)  {menu=0; knkd=0;}  
   else if (pressed_button==stp)  {knkd++;}  
   else if (pressed_button==ppm) {sp=sp+300000;}
-  else if (pressed_button==pproc && nkpz==false){nkpz=true; pump_work=LOW; digitalWrite(pin_relay,LOW);digitalWrite(pin_pump,LOW);}
+  else if (pressed_button==pproc && nkpz==false){nkpz=true; pump_work=LOW; analogWrite(pin_relay,0);digitalWrite(pin_pump,LOW);}
   else if (pressed_button==pproc && nkpz==true){nkpz=false;}
   else if (pressed_button==plus) {
 
@@ -383,7 +389,7 @@ if (drowMenu!=0) {
   sp=clock()+60000000;
   nagrev=true;
   load_settings ();
-  digitalWrite (pin_relay,LOW);
+  analogWrite (pin_relay,0);
   digitalWrite (pin_pump ,LOW);
   analogWrite (pin_zvuk,0);
   write_EEPROM(20,0);
@@ -1106,7 +1112,7 @@ if (clock() >= (pauza[1] + 100)){
 
 if (nkpz==false) PID_HEAT (tp[nomer_pauzi]);
 
-if (nomer_pauzi>kol_pauz) {digitalWrite(pin_pump,LOW); digitalWrite(pin_relay,LOW);disableKnopok(1);myGLCD.print ("KOHE""\x8C"" 3AT""\x86""PAH""\x86\x95",CENTER,110); beeper(); delay (10000); menu=0; } 
+if (nomer_pauzi>kol_pauz) {digitalWrite(pin_pump,LOW); analogWrite(pin_relay,0);disableKnopok(1);myGLCD.print ("KOHE""\x8C"" 3AT""\x86""PAH""\x86\x95",CENTER,110); beeper(); delay (10000); menu=0; } 
 
 /*Засыпка солода*/
 if (nagrev==true && t_zatora>=tp[0] && solod==false){
@@ -1155,31 +1161,33 @@ pauza[1] = clock();}
 
 
 void PID_HEAT (int temperatura){
-Input = t_zatora;
-Setpoint = temperatura;
-if ((st[0]==0 && st[1]==0 && st[2]==0) || st[3]==0) {
-if (Input<Setpoint) digitalWrite(pin_relay,HIGH);
-else digitalWrite(pin_relay,LOW);
-}
-else {  
-  if((Setpoint - Input)>5){
-    digitalWrite(pin_relay,HIGH);
-    if ((Setpoint - Input)<6)
-    {
-      myPID.Compute();
+    Input = t_zatora;
+    Setpoint = temperatura;
+    if ((st[0]==0 && st[1]==0 && st[2]==0) || st[3]==0) {
+        if (Input<Setpoint) analogWrite(pin_relay,255);
+        else analogWrite(pin_relay,0);
     }
-  }
-  else{
-    myPID.Compute();
-    unsigned long now = clock();
-    if(now - windowStartTime>st[3])
-    {                                     //time to shift the Relay Window
-      windowStartTime += st[3];
+    else {  
+        if((Setpoint - Input)>5){
+            analogWrite(pin_relay,255);
+            if ((Setpoint - Input)<6){
+                myPID.Compute();
+            }
+        }
+        else{
+            myPID.Compute();
+            unsigned long now = clock();
+            if(now - windowStartTime>st[3]){     //time to shift the Relay Window
+                windowStartTime += st[3];
+            }
+            if((Output*(st[3]/100)) > now - windowStartTime){
+                analogWrite(pin_relay,255);
+            }
+            else{
+                analogWrite(pin_relay,0);
+            }
+        }
     }
-    if((Output*(st[3]/100)) > now - windowStartTime)  digitalWrite(pin_relay,HIGH);
-    else  digitalWrite(pin_relay,LOW);
-  }
-}
 }
 
 
@@ -1210,19 +1218,13 @@ pauza[2]= clock();}
 
 
 
-if (nagrev==false) { 
-if (shim<100 && shim>0) { 
-int ppw[2]; 
-ppw[0] = map(shim, 0, 100, 0, 5000); 
-ppw[1] = 5000-ppw[0]; 
-if (millis()>pauza[5]) {pauza[5]=millis()+long(ppw[ert]);ert++;} 
-if (ert>1) {ert=0; digitalWrite(pin_relay,LOW);} 
-else if (ert==1) {digitalWrite(pin_relay,HIGH);} 
-} 
-else if (shim==0) {digitalWrite(pin_relay,LOW);ert=0;} 
-else {digitalWrite(pin_relay,HIGH);ert=0;} 
-} 
-else digitalWrite(pin_relay,HIGH);
+if (true) { //nagrev==false
+    shim_=shim*78.5;
+    if (shim_==255){shim_=254;}
+    analogWrite(pin_relay, shim_);      
+}else{ 
+    analogWrite(pin_relay,255);
+}
 
 if (t_zatora>78.4 && t_zatora<78.6) digitalWrite(pin_par,HIGH);
 else digitalWrite(pin_par,LOW);
@@ -1234,9 +1236,9 @@ if (nagrev==true && t_zatora>=st[5]) {nagrev=false; sp=clock()+long(vr_varki)*60
 
 
 
-PID_HEAT (st[5]+dh);
+//PID_HEAT (st[5]+dh);
 
-if (clock()>=sp) {digitalWrite(pin_pump,LOW); digitalWrite(pin_relay,LOW);digitalWrite(pin_cool,HIGH);disableKnopok(1);
+if (clock()>=sp) {digitalWrite(pin_pump,LOW); analogWrite(pin_relay,0);digitalWrite(pin_cool,HIGH);disableKnopok(1);
 myGLCD.print ("KOHE""\x8C"" BAPK""\x86",CENTER,110);beeper();delay (3000);  menu=15;}
 
 if (nagrev==false){
@@ -1353,7 +1355,7 @@ myGLCD.print ("               " , CENTER ,40);
 void pump_zator () {
   if (st[9]==0) {
   if (st[12]==1) {
-  if (digitalRead(pin_relay)==LOW) pump_work=HIGH;
+  if (analogRead(pin_relay)==0) pump_work=HIGH;
   else pump_work=LOW;
   }
   else if (st[13]>0) {
@@ -1504,7 +1506,7 @@ else return "0";
 void SSColor (){
 String ub="/"+floattostring(t_zatora,1)+"/";
 myGLCD.setFont(SevenSegNumFont);
-if (digitalRead(pin_relay)==HIGH) {
+if (analogRead(pin_relay)==255) {
 myGLCD.setColor(VGA_RED);
 myGLCD.print (ub,CENTER,65);
 myGLCD.setColor(255,255,255);
