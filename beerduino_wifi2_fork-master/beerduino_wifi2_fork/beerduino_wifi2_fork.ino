@@ -131,7 +131,7 @@ void setup()
   InitTimersSafe();  
 
   digitalWrite (pin_pump ,LOW);
-  analogWrite (pin_relay,0);
+  Heater (0);
   SetPinFrequency(pin_relay, 1); 
 
   analogWrite (pin_zvuk ,0);
@@ -250,7 +250,7 @@ if (myTouch.dataAvailable())    {
   else if (pressed_button==stp && knkd>1)  {menu=0; knkd=0;}  
   else if (pressed_button==stp)  {knkd++;}  
   else if (pressed_button==ppm) {sp=sp+300000;}
-  else if (pressed_button==pproc && nkpz==false){nkpz=true; pump_work=LOW; analogWrite(pin_relay,0);digitalWrite(pin_pump,LOW);}
+  else if (pressed_button==pproc && nkpz==false){nkpz=true; pump_work=LOW; Heater(0);digitalWrite(pin_pump,LOW);}
   else if (pressed_button==pproc && nkpz==true){nkpz=false;}
   else if (pressed_button==plus) {
 
@@ -389,7 +389,7 @@ if (drowMenu!=0) {
   sp=clock()+60000000;
   nagrev=true;
   load_settings ();
-  analogWrite (pin_relay,0);
+  Heater(0);
   digitalWrite (pin_pump ,LOW);
   analogWrite (pin_zvuk,0);
   write_EEPROM(20,0);
@@ -1112,7 +1112,7 @@ if (clock() >= (pauza[1] + 100)){
 
 if (nkpz==false) PID_HEAT (tp[nomer_pauzi]);
 
-if (nomer_pauzi>kol_pauz) {digitalWrite(pin_pump,LOW); analogWrite(pin_relay,0);disableKnopok(1);myGLCD.print ("KOHE""\x8C"" 3AT""\x86""PAH""\x86\x95",CENTER,110); beeper(); delay (10000); menu=0; } 
+if (nomer_pauzi>kol_pauz) {digitalWrite(pin_pump,LOW); Heater(0);disableKnopok(1);myGLCD.print ("KOHE""\x8C"" 3AT""\x86""PAH""\x86\x95",CENTER,110); beeper(); delay (10000); menu=0; } 
 
 /*Засыпка солода*/
 if (nagrev==true && t_zatora>=tp[0] && solod==false){
@@ -1164,12 +1164,12 @@ void PID_HEAT (int temperatura){
     Input = t_zatora;
     Setpoint = temperatura;
     if ((st[0]==0 && st[1]==0 && st[2]==0) || st[3]==0) {
-        if (Input<Setpoint) analogWrite(pin_relay,255);
-        else analogWrite(pin_relay,0);
+        if (Input<Setpoint) Heater(100);
+        else Heater(0);
     }
     else {  
         if((Setpoint - Input)>5){
-            analogWrite(pin_relay,255);
+            Heater(100);
             if ((Setpoint - Input)<6){
                 myPID.Compute();
             }
@@ -1181,10 +1181,10 @@ void PID_HEAT (int temperatura){
                 windowStartTime += st[3];
             }
             if((Output*(st[3]/100)) > now - windowStartTime){
-                analogWrite(pin_relay,255);
+                Heater(100);
             }
             else{
-                analogWrite(pin_relay,0);
+                Heater(0);
             }
         }
     }
@@ -1219,11 +1219,9 @@ pauza[2]= clock();}
 
 
 if (true) { //nagrev==false
-    shim_=shim*78.5;
-    if (shim_==255){shim_=254;}
-    analogWrite(pin_relay, shim_);      
+  Heater(shim);      
 }else{ 
-    analogWrite(pin_relay,255);
+    Heater(100);
 }
 
 if (t_zatora>78.4 && t_zatora<78.6) digitalWrite(pin_par,HIGH);
@@ -1238,7 +1236,7 @@ if (nagrev==true && t_zatora>=st[5]) {nagrev=false; sp=clock()+long(vr_varki)*60
 
 //PID_HEAT (st[5]+dh);
 
-if (clock()>=sp) {digitalWrite(pin_pump,LOW); analogWrite(pin_relay,0);digitalWrite(pin_cool,HIGH);disableKnopok(1);
+if (clock()>=sp) {digitalWrite(pin_pump,LOW); Heater(0);digitalWrite(pin_cool,HIGH);disableKnopok(1);
 myGLCD.print ("KOHE""\x8C"" BAPK""\x86",CENTER,110);beeper();delay (3000);  menu=15;}
 
 if (nagrev==false){
@@ -1700,4 +1698,14 @@ void srv_hop(int j) {
 //beeper();
 //servo.write(0);
 //beeper();
+}
+
+void Heater(float power){
+    if (power==100){
+      analogWrite(pin_relay, 255); 
+    }else{
+      power=power*78.5;
+      if (power==255){power=254;}
+      analogWrite(pin_relay, power);  
+    }   
 }
