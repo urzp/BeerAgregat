@@ -21,8 +21,8 @@
 //Servo servo;
 
 //пид
-double Setpoint, Input, Output;
-PID myPID(&Input, &Output, &Setpoint,100,20,5, DIRECT);
+double Setpoint, Input, Output_PID;
+PID myPID(&Input, &Output_PID, &Setpoint,100,20,5, DIRECT);
 unsigned long windowStartTime;
 
 OneWire ds(10); // порт температурного датчика
@@ -121,10 +121,10 @@ int chas,minuta;
 void setup()
 {
 
-  
+
   Serial3.begin(57600);
   Serial.begin(9600);
-  
+
   pinMode(pin_relay, OUTPUT);   
   pinMode(pin_pump,  OUTPUT);
   
@@ -182,7 +182,7 @@ void setup()
   varev  =myButtons.addButton( 10, 160, 130,  35, "BAP""\x86""T""\x92"); // кнопка "Варить"
   ppm  =myButtons.addButton( 273,120, 40, 40, "+5"); // кнопка "+5мин"
   pproc= myButtons.addButton(  7,120, 40, 40, "P"); // кнопка "пауза"
-  
+
   for (int j=0; j <5 ; j++) {
     minus_m[j]  =myButtons.addButton( 50,4+38*j , 70,  30, "-");
     plus_m[j]  = myButtons.addButton( 200,4+38*j ,70,  30, "+");
@@ -343,13 +343,13 @@ else if (menu==4) {vremya(pressed_button);}
 else if (menu==5) {vremya_2(pressed_button);}
 else if (menu==12) {hop(pressed_button);}
 else if (menu==14) {
- 
+
   if       (pressed_button == plus_m[4])     {shim++; }
   else if  (pressed_button ==minus_m[4])     {shim--; }
   shim=constrain(shim, 1, 100);
   myGLCD.print("    ", CENTER,164 );
   myGLCD.print(String(shim), CENTER,164 );
-  
+
   //  if       (pressed_button == plus_m[4])     {dh++; }
   //  else if  (pressed_button ==minus_m[4])     {dh--; }
 
@@ -371,7 +371,7 @@ else if (menu==42){
 //*************************************************************************************************************************************************
 //*************************************************************************************************************************************************
 switch (menu) {
-  
+
 case 0: // главное меню 
 if (drowMenu!=0) {
   vpop==0; nomer_pauzi=0;nstad=0;dkpm=0;solod=false; 
@@ -385,7 +385,7 @@ if (drowMenu!=0) {
   myButtons.enableButton (moyka, true);
   if (!rtctf) myGLCD.print ("BEERDUINO v1.5",75,12);  
   else   myButtons.enableButton (tim, true);
-  
+
   sp=clock()+60000000;
   nagrev=true;
   load_settings ();
@@ -729,7 +729,7 @@ if (drowMenu!=22) {
     myButtons.enableButton (dalee, true); 
   }
   myButtons.enableButton (nazad, true);
-  
+
   myGLCD.print (recname[nom_rec] , CENTER ,10);
   myGLCD.setFont(SmallFont);
   kol_pauz=recpara[nom_rec][1];
@@ -756,7 +756,7 @@ if (drowMenu!=22) {
     if (x>0) {iks=178; igr=115+7*(j-1); x=0;}
     else {iks=33; igr=115+7*j; x++;}
     myGLCD.print ("XME""\x88\x92"" N"+String(j+1)+ " "+String(vh[j])+"\xA1\x9D\xA2", iks ,igr);
-    
+
   }
   if (!error) {myButtons.enableButton (varev, true); myButtons.enableButton (zater, true);}
   else { myGLCD.setFont(BigFont);myGLCD.print ("O""\x8E\x86\x80""KA B PE""\x8C""E""\x89""TE",CENTER,160);} 
@@ -827,7 +827,7 @@ if (drowMenu!=32) {
  st[7]=constrain(st[7], -25, 25); 
  st[8]=constrain(st[8], 20, 30); 
  st[9]=constrain(st[9], 0, 1); 
- 
+
  myGLCD.print(String(st[5]), CENTER,12 );
  myGLCD.print(onoff[st[6]], CENTER,50 );
  myGLCD.print(String(st[7]), CENTER,88 );
@@ -934,7 +934,7 @@ void disableKnopok (int nm){
     myButtons.enableButton (minus, true); 
     myButtons.enableButton (dalee, true); 
     myButtons.enableButton (nazad, true);   
-    
+
   }
 
   void mpm(int kk) {
@@ -946,7 +946,7 @@ void disableKnopok (int nm){
     myButtons.enableButton (dalee, true); 
     myButtons.enableButton (nazad, true); 
     
-    
+
   }
 
 
@@ -965,7 +965,7 @@ void disableKnopok (int nm){
   myGLCD.print ("B,""\xA1\x9D\xA2",280,170);
   myGLCD.setColor(255,0,0);
   for (int j=1; j <=kol_pauz ; j++) {
-    
+
     xnl=5+xkl+10;
     ynl=195-tp[j];
     xkl=xnl+vp[j];
@@ -1163,31 +1163,34 @@ void progon_po_pauzam(){
   void PID_HEAT (int temperatura){
     Input = t_zatora;
     Setpoint = temperatura;
-    if ((st[0]==0 && st[1]==0 && st[2]==0) || st[3]==0) {
-      if (Input<Setpoint) Heater(100);
-      else Heater(0);
-    }
-    else {  
-      if((Setpoint - Input)>5){
-        Heater(100);
-        if ((Setpoint - Input)<6){
-          myPID.Compute();
-        }
-      }
-      else{
-        myPID.Compute();
-        unsigned long now = clock();
-            if(now - windowStartTime>st[3]){     //time to shift the Relay Window
-              windowStartTime += st[3];
-            }
-            if((Output*(st[3]/100)) > now - windowStartTime){
-              Heater(100);
-            }
-            else{
-              Heater(0);
-            }
-          }
-        }
+    myPID.Compute();
+    Heater(Output_PID);
+    
+    // if ((st[0]==0 && st[1]==0 && st[2]==0) || st[3]==0) {
+    //   if (Input<Setpoint) Heater(100);
+    //   else Heater(0);
+    // }
+    // else {  
+    //   if((Setpoint - Input)>5){
+    //     Heater(100);
+    //     if ((Setpoint - Input)<6){
+    //       myPID.Compute();
+    //     }
+    //   }
+    //   else{
+    //     myPID.Compute();
+    //     unsigned long now = clock();
+    //         if(now - windowStartTime>st[3]){     //time to shift the Relay Window
+    //           windowStartTime += st[3];
+    //         }
+    //         if((Output*(st[3]/100)) > now - windowStartTime){
+    //           Heater(100);
+    //         }
+    //         else{
+    //           Heater(0);
+    //         }
+    //       }
+    //     }
       }
 
 
@@ -1229,7 +1232,7 @@ else digitalWrite(pin_par,LOW);
 
 
 if (clock() >= (pauza[1] + 100)){
- 
+
   if (nagrev==true && t_zatora>=st[5]) {nagrev=false; sp=clock()+long(vr_varki)*60000;   vnv=clock();}
 
 
@@ -1289,9 +1292,9 @@ if (clock()>sp-long((float(vh[j])+0.15)*60000) && clock()<sp-long((float(vh[j])-
     ds.reset();
     ds.select(addr);
     ds.write(0x44, 1);        
-    
-    
-    
+
+
+
     present = ds.reset();
     ds.select(addr);    
     ds.write(0xBE);         
@@ -1308,14 +1311,14 @@ if (clock()>sp-long((float(vh[j])+0.15)*60000) && clock()<sp-long((float(vh[j])-
       }
     } else {
       byte cfg = (data[4] & 0x60);
-      
+
       if (cfg == 0x00) raw = raw & ~7;  
       else if (cfg == 0x20) raw = raw & ~3; 
       else if (cfg == 0x40) raw = raw & ~1; 
-      
+
     }
     t_zatora = ((float)raw / 16.0)+ (float)st[4];
-    
+
   }
 
 
@@ -1363,7 +1366,7 @@ void pump_zator () {
         if (clock()>sump) {sump=clock()+long(st[13+npp])*1000;npp++;}
         if (npp>1 && st[14]>0) {npp=0;pump_work=LOW;}
         else if (npp==1) {pump_work=HIGH;} 
-        
+
         int prp=(sump-clock())/1000;
         int ksrp;
         if (prp>9) ksrp=0;
@@ -1372,24 +1375,24 @@ void pump_zator () {
       }
     }
     else {pump_work=LOW;}  
-    
+
     if (t_zatora>st[10] && vpop==0) {vpop=clock()+60000;}  
     if (clock()>vpop) {
-     
+
       if (t_zatora>=st[10]){pump_work=LOW;}
       else {vpop=0;}
-      
+
     }
     else {pump_work=LOW;}
-    
+
   }
   else {pump_work=HIGH;}
   digitalWrite(pin_pump, pump_work);  
 }
 
 void pump_varka () {
- 
- 
+
+
   if (st[9]==0) {
     if (st[11]==1  && st[13]>0)  {
       if (clock()>sump) {sump=clock()+long(st[13+npp])*1000;npp++;}
@@ -1405,14 +1408,14 @@ void pump_varka () {
 
     if (t_zatora>st[10] && vpop==0) {vpop=clock()+60000;}  
     if (clock()>vpop) {
-     
+
       if (t_zatora>=st[10]){pump_work=LOW;}
       else {vpop=0;}
-      
+
     }
     else {pump_work=LOW;}
 
-    
+
   }
   else {pump_work=HIGH;}
 
@@ -1430,17 +1433,17 @@ void Load_recepies(char* recepies) {
     kol_receptov=0;
     char buff[21];
     byte rec = 0, par = 0, c = 0;
-    
+
     while(configFile.available())
     {
       if (kol_receptov>29) {configFile.close(); break;}
-      
+
       char symb = configFile.read();
       if(symb >= 32)
       {
         if(symb == ',' || symb == ';')
         {
-          
+
           buff[c] = '\0';
           c = 0;
           if(par == 0) strcpy(recname[rec], buff);
@@ -1634,7 +1637,7 @@ void pumpind() {
 
 unsigned long clock() {
   if  (rtctf) {
-    
+
     if   (millis()<(dkvrtc+1000)){return ((now()-starttime)*1000+millis()-dkvrtc);}
     else {dkvrtc=millis(); return ((now()-starttime)*1000);}
 
