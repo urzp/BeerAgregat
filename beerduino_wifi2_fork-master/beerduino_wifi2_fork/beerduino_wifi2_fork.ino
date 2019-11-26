@@ -4,7 +4,7 @@
 #include <UTFT_Buttons.h>
 #include <OneWire.h>
 #include <SD.h>
-#include <PID_v1.h>
+#include "PID_v1.h"
 #include <PWM.h>
 #include <EEPROM.h>
 #include "Time.h"
@@ -1100,7 +1100,8 @@ void progon_po_pauzam(){
 
   if(clock() >= (pauza[2] + 1000)){
    SSColor(); 
-   myGLCD.print ("-> "+String(tp[nomer_pauzi])+"\x7F""C",CENTER,125);
+   myGLCD.print ("              ",CENTER,125);
+   myGLCD.print ("->"+String(tp[nomer_pauzi])+"\x7F""C P="+String((int)Output_PID)+"%",CENTER,125);
    myGLCD.print ("   ""\x89""A""\x8A""3A N"+String(nomer_pauzi)+"   ",CENTER,150);
    if (nagrev==false && dkpm<=maxvp) { myGLCD.print ("KOHE""\x8C"" ""\x89""A""\x8A""3""\x91""->"+nullvp(dkpm)+":"+nullvp(dkps)+"  ",10,200);}
    else {myGLCD.print ("                    ",10,200); }
@@ -1329,7 +1330,8 @@ if (clock()>sp-long((float(vh[j])+0.15)*60000) && clock()<sp-long((float(vh[j])-
     for (int j=0; j <15 ; j++) {
       st[j] = read_EEPROM (j);
     }
-    myPID.SetTunings(st[0],st[1]/100,st[2]);
+    
+    myPID.SetTunings(st[0],st[1],st[2]);
     myPID.SetOutputLimits(0, 100);
     myPID.SetSampleTime(5000);
 
