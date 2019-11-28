@@ -55,7 +55,7 @@ bool PID::Compute()
 	  double input = *myInput;
       double error = *mySetpoint - input;
       ITerm = ITerm + (ki * error)/5000;
-      if(ITerm > outMax) ITerm= outMax;
+      if(ITerm > outMax) ITerm= outMax; 
       else if(ITerm < outMin) ITerm= outMin;
       double dInput = (input - lastInput);
  
@@ -193,4 +193,4 @@ double PID::GetKi(){ return  dispKi;}
 double PID::GetKd(){ return  dispKd;}
 int PID::GetMode(){ return  inAuto ? AUTOMATIC : MANUAL;}
 int PID::GetDirection(){ return controllerDirection;}
-
+void PID::Reset(){ITerm = 0;}

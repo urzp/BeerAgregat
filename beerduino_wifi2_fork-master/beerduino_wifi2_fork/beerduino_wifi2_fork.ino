@@ -319,6 +319,8 @@ else if (pressed_button==dalee)   {
     setSyncProvider(RTC.get);
     menu=0;
   }  
+  else if ((menu==2)&&(kol_pauz<6)){menu=4;}
+  else if ((menu==4)&&(kol_pauz<6)){menu=6;}
   else if ((menu==6)&&(kol_pauz>5)){menu=60;}
   else if ((menu==60)&&(kol_pauz>5)){menu=7;}
   else {menu++;}
@@ -331,6 +333,8 @@ else if (pressed_button==nazad)   {
   else if (menu==22 && nom_rec>0)   {nom_rec--;drowMenu=1000;}    
   else if (menu==41)  {menu=0;l_etap=0;} 
   else if (menu==42)  {menu=0;}
+  else if ((menu==4)&&(kol_pauz<6)){menu=2;}
+  else if ((menu==6)&&(kol_pauz<6)){menu=4;}
   else if ((menu==60)&&(kol_pauz>5)){menu=6;}
   else if ((menu==7)&&(kol_pauz>5)){menu=60;}  
   else {menu--;}
@@ -414,7 +418,7 @@ drowMenu=1;
 myGLCD.print ("KO""\x88\x86\x8D""ECTBO ""\x89""A""\x8A\x85",CENTER,10);
 myGLCD.setFont(SevenSegNumFont);
 myGLCD.printNumI(kol_pauz, CENTER, 70);
-
+myPID.Reset();
 
 break;
 
@@ -436,8 +440,6 @@ for (int j=0; j <kol_pauz_page1 ; j++) {
 break;
 
 case 3:  // температура пауз
-if (kol_pauz<6 and drowMenu==2) {menu=4;break;}
-if (kol_pauz<6 and drowMenu==4) {menu=2;break;}
 if (drowMenu==3) break;
 disableKnopok (drowMenu);
 mpm(kol_pauz-5);
@@ -464,8 +466,6 @@ for (int j=0; j <kol_pauz_page1 ; j++) {
  break;
 
 case 5: // время пауз
-if (kol_pauz<6 and drowMenu==4) {menu=6;break;}
-if (kol_pauz<6 and drowMenu==6) {menu=4;break;}
 if (drowMenu==5) break;
 disableKnopok (drowMenu);
 mpm(kol_pauz-5);
@@ -509,6 +509,7 @@ for (int j=6; j <=kol_pauz ; j++) {
   myGLCD.print ("\x89""A""\x8A\x85""A N"+String(j)+": "+"T="+String(tp[j])+"\x7F | B="+String(vp[j])+"\xA1\x9D\xA2"  , CENTER ,20+15*(j-5));
 }
 drowMenu=60;
+
 break;
 
 case 7:
@@ -802,7 +803,7 @@ if (drowMenu!=31) {
   myGLCD.print("pT", 275,164 );
 }
 for (int j=0; j <5 ; j++) {
- if (j<3) st[j]=constrain(st[j], -150, 150); 
+ if (j<3) st[j]=constrain(st[j], 0, 300); 
  st[3]=constrain(st[3], 0, 7500);
  st[4]=constrain(st[4], -5, 5);
  myGLCD.print(String(st[j]), CENTER,12+38*j );
@@ -1333,7 +1334,7 @@ if (clock()>sp-long((float(vh[j])+0.15)*60000) && clock()<sp-long((float(vh[j])-
     
     myPID.SetTunings(st[0],st[1],st[2]);
     myPID.SetOutputLimits(0, 100);
-    myPID.SetSampleTime(5000);
+    myPID.SetSampleTime(st[3]);
 
   }
 
